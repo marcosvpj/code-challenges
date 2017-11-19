@@ -1,0 +1,142 @@
+<canvas id="gc" width="400" height="400"></canvas>
+<script type="text/javascript">
+
+let canvas;
+const scale = 10;
+
+const snake = {
+  position: {
+    x: 0,
+    y: 0
+  },
+  size: 0,
+  tail: []
+};
+
+const fruit = {
+  position: {
+    x: 0,
+    y: 0
+  }
+};
+
+window.onload = function() {
+  canvas = document.getElementById("gc");
+  context = canvas.getContext("2d");
+  document.addEventListener("keydown", keyPush);
+
+  fruit.position.x = rand(0, canvas.width / scale) * scale;
+  fruit.position.y = rand(0, canvas.height / scale) * scale;
+
+  setInterval(game, 1000/15);
+}
+
+let xspeed = yspeed = 0;
+// let snake.position.x = snake.position.y = 0;
+
+function rand(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function placeFruit(x, y) {
+  context.fillStyle = "red";
+  context.fillRect(x, y, scale, scale);
+}
+
+function checkColision(objectA, objectB) {
+  return objectA.x == objectB.x
+          && objectA.y == objectB.y
+}
+
+function game() {
+  for (var i = 0; i < snake.tail.length-1; i++) {
+    snake.tail[i] = snake.tail[i+1];
+  };
+
+  if (snake.size >= 1) {
+    snake.tail[snake.size - 1] = {
+      x: snake.position.x,
+      y: snake.position.y
+    };
+  }
+
+  context.fillStyle = "black";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  snake.position.x += xspeed * scale;
+  snake.position.y += yspeed * scale;
+
+  if (snake.position.x < 0) {
+    snake.position.x = 0;
+  }
+  if (snake.position.y < 0) {
+    snake.position.y = 0;
+  }
+
+  if (snake.position.x > canvas.width - scale) {
+    snake.position.x = canvas.width - scale;
+  }
+  if (snake.position.y > canvas.height - scale) {
+    snake.position.y = canvas.height - scale;
+  }
+
+  if (checkColision(fruit.position, snake.position)) {
+    fruit.position.x = rand(0, canvas.width / scale) * scale;
+    fruit.position.y = rand(0, canvas.height / scale) * scale;
+
+    snake.size++;
+
+    // snake.tail.push({x:snake.position.x, y:snake.position.y});
+  }
+  for (var i = 0; i < snake.tail.length; i++) {
+    if(checkColision(snake.position, snake.tail[i])) {
+      snake.size = 0;
+      snake.tail = [];
+      console.log('game over');
+      snake.position.x = Math.floor(canvas.width / scale) / 2 * scale;
+      snake.position.y = Math.floor(canvas.height / scale) / 2 * scale;
+      break;
+    }
+  };
+
+  placeFruit(fruit.position.x, fruit.position.y);
+
+  context.fillStyle = "white";
+  context.fillRect(snake.position.x, snake.position.y, scale, scale);
+
+  for (var i = 0; i < snake.tail.length; i++) {
+    context.fillRect(snake.tail[i].x, snake.tail[i].y, scale, scale);
+  };
+}
+
+function keyPush(event) {
+  switch(event.keyCode) {
+    case 37:
+      if (xspeed == 0 || snake.size == 0) {
+        xspeed = -1;
+        yspeed = 0;
+      }
+      break;
+    case 38:
+      if (yspeed == 0 || snake.size == 0) {
+        xspeed = 0;
+        yspeed = -1;
+      }
+      break;
+    case 39:
+      if (xspeed == 0 || snake.size == 0) {
+        xspeed = 1;
+        yspeed = 0;
+      }
+      break;
+    case 40:
+      if (yspeed == 0 || snake.size == 0) {
+        xspeed = 0;
+        yspeed = 1;
+      }
+      break;
+  }
+}
+</script>
