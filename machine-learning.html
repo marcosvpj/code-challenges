@@ -1,0 +1,143 @@
+<h1 id="target"></h1>
+<pre id="result"></pre>
+
+<script type="text/javascript">
+
+const target = 'Hello world!';
+const total_generations = 150;
+const total_entities = 250;
+const mutation_chance = 5;
+
+const chosen_one = {fitness: 0};
+
+let generation = 0;
+var mating_pool = [];
+var looper = null;
+
+
+window.onload = function() {
+  const target_node = document.getElementById('target');
+  target_node.innerText = target;
+
+
+  for (let j = total_entities; j >= 0; j--) {
+    const dna = generate_random_dna();
+    chosen_one.dna = dna;
+
+    const result_node = document.getElementById('result');
+    result_node.innerText = dna;
+
+    const fitness = calcule_fitness(target, dna);
+
+    mating_pool.push({fitness, dna, probability: fitness});
+  }
+
+  looper = setInterval(loop, 10);
+}
+
+function generate_random_dna() {
+  let dna = '';
+
+  for (var i = target.length - 1; i >= 0; i--) {
+   dna += random_char();
+  }
+
+  return dna;
+}
+
+function random_char() {
+  const universe = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 !';
+  return universe[rand(0, universe.length)];
+}
+
+function calcule_fitness(target, dna)
+{
+  let fitness = 0;
+  for (var i = dna.length - 1; i >= 0; i--) {
+    fitness += (dna[i] == target[i]);
+  }
+
+  return fitness;
+}
+
+function loop() {
+  console.log('generation: ', generation);
+
+  normaliza_probability(mating_pool);
+
+  const childrens = breed(mating_pool);
+  mating_pool = childrens;
+
+
+  const result_node = document.getElementById('result');
+  result_node.innerText = JSON.stringify(chosen_one);
+
+  generation++;
+  if (chosen_one.dna == target) {
+    clearInterval(looper);
+  }
+}
+
+function normaliza_probability(mating_pool) {
+    let total = 0;
+
+    for (var i = mating_pool.length - 1; i >= 0; i--) {
+      total += mating_pool[i].fitness;
+    }
+
+    for (var i = mating_pool.length - 1; i >= 0; i--) {
+      mating_pool[i].probability = mating_pool[i].fitness / total;
+    }
+}
+
+function breed(population) {
+  const mating_pool = [];
+
+  population.forEach( function(element, index) {
+    let n = element.fitness * 100;
+    for (let i = 0; i <= n; i++) {
+      mating_pool.push(population[index]);
+    }
+  });
+
+  const childrens = [];
+  population.forEach( function(element, index) {
+    const parent_A = mating_pool[rand(0, mating_pool.length-1)];
+    const parent_B = mating_pool[rand(0, mating_pool.length-1)];
+
+    const child = crossover(parent_A, parent_B);
+    child.dna = mutate(child.dna);
+    childrens.push(child);
+
+    if (child.fitness >= chosen_one.fitness) {
+      chosen_one.dna = child.dna;
+      chosen_one.fitness = child.fitness;
+      chosen_one.generation = generation;
+    }
+  });
+
+  return childrens;
+}
+
+function crossover(parent_A, parent_B) {
+  const position = rand(0, parent_A.dna.length-1);
+
+  const child_dna = parent_A.dna.slice(0, position) + parent_B.dna.slice(parent_B.dna.length * -1 + position);
+
+  const fitness = calcule_fitness(target, child_dna);
+  return {fitness, dna: child_dna, probability: fitness};
+}
+
+function mutate(dna) {
+  for (var i = dna.length - 1; i >= 0; i--) {
+    if (rand(0,100) <= mutation_chance) {
+      dna = dna.substr(0, i) + random_char() + dna.substr(i+1);
+    }
+  }
+  return dna;
+}
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (Math.floor(max) - Math.ceil(min))) + Math.ceil(min);
+}
+</script>
